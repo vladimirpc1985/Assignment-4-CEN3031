@@ -2,7 +2,6 @@
 /* Dependencies */
 var mongoose = require('mongoose'), 
     Listing = require('../models/listings.server.model.js');
-
 /*
   In this file, you should use Mongoose queries in order to retrieve/add/remove/update listings.
   On an error you should send a 404 status code, as well as the error message. 
@@ -32,7 +31,12 @@ exports.create = function(req, res) {
       console.log(err);
       res.status(400).send(err);
     } else {
-      res.json(listing);
+        Listing.find({code: listing.code}, function (err, obj) {
+            if (err) res.status(400).send(err);
+
+            console.log('In create function!');
+            res.json(listing);
+        });
     }
   });
 };
@@ -45,23 +49,59 @@ exports.read = function(req, res) {
 
 /* Update a listing */
 exports.update = function(req, res) {
-  var listing = req.listing;
+    var listing = req.listing;
 
-  /* Replace the article's properties with the new properties found in req.body */
-  /* save the coordinates (located in req.results if there is an address property) */
-  /* Save the article */
+    /* Replace the article's properties with the new properties found in req.body */
+    if (req.body) {
+        listing.code = req.body.code;
+        listing.name = req.body.name;
+        listing.address = req.body.address;
+    }
+
+    /* save the coordinates (located in req.results if there is an address property) */
+    if(req.results) {
+        listing.coordinates = {
+            latitude: req.results.lat,
+            longitude: req.results.lng
+        };
+    }
+
+
+    /* Save the article */
+    listing.save(function (err) {
+        if (err) res.status(400).send(err);
+
+        console.log('In update function!');
+        res.status(200).send(listing);
+    });
 };
 
 /* Delete a listing */
 exports.delete = function(req, res) {
   var listing = req.listing;
+  console.log("In delete function");
 
   /* Remove the article */
+   Listing.findOneAndRemove({code: listing.code}, function (err) {
+     if (err) {
+         console.log(err);
+         res.status(400).send(err);
+     }
+     res.status(200);
+     res.json(listing);
+  });
 };
 
 /* Retreive all the directory listings, sorted alphabetically by listing code */
 exports.list = function(req, res) {
   /* Your code here */
+  Listing.find({}, function (err, listing) {
+      if(err) {
+          console.log(err);
+          res.status(400).send(err);
+      }
+      res.json(listing);
+  }).sort({code: 1});
 };
 
 /* 

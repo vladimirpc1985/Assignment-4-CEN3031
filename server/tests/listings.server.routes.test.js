@@ -95,7 +95,7 @@ describe('Listings CRUD tests', function() {
         should.not.exist(err);
         should.exist(res);
 
-        agent.get('/api/listings/' + id) 
+        agent.get('/api/listings/' + id)
           .expect(400)
           .end(function(err, res) {
             id = undefined;
